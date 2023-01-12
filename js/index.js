@@ -5,9 +5,11 @@ const visor = document.getElementById("resultado");
 //Observer para manejar estado de la calculadora
 function stateCalculadora() {
   return {
-    result: 0,
-    input: [],
-    operator: "",
+    state: {
+      result: 0,
+      input: [],
+      operator: "",
+    },
     subscribers: [],
     suscribe: function (subscriber) {
       this.subscribers.push(subscriber);
@@ -26,51 +28,51 @@ function stateCalculadora() {
 
 //Operaciones de State
 function start() {
-  this.notify(this);
+  this.notify(this.state);
 }
 
 function update(btn) {
   if (btn.classList.contains("numeros")) {
-    if (this.operator) {
-      if (this.result && this.operator !== "C") {
-        this.input.push(Number(btn.textContent));
-        this.operations(this.operator);
+    if (this.state.operator) {
+      if (this.state.result && this.state.operator !== "C") {
+        this.state.input.push(Number(btn.textContent));
+        this.operations(this.state.operator);
       } else {
-        this.input.push(Number(btn.textContent));
-        this.notify(this);
+        this.state.input.push(Number(btn.textContent));
+        this.notify(this.state);
       }
     } else {
-      this.input.push(Number(btn.textContent));
-      this.notify(this);
+      this.state.input.push(Number(btn.textContent));
+      this.notify(this.state);
     }
   } else {
     //1er número y 1er número después de un igual
-    if (this.input.length === 0 && this.result) {
-      this.input.push(this.result);
+    if (this.state.input.length === 0 && this.state.result) {
+      this.state.input.push(this.state.result);
     }
 
     //Almacenar tipo de operación actual
     if (
-      this.operator !== btn.textContent &&
+      this.state.operator !== btn.textContent &&
       (btn.textContent === "+" ||
         btn.textContent === "-" ||
         btn.textContent === "*" ||
         btn.textContent === "/")
     ) {
-      this.operator = btn.textContent;
+      this.state.operator = btn.textContent;
     }
 
     switch (btn.textContent) {
       case "C":
-        this.operator = "C";
-        this.result = 0;
-        this.input = [];
-        this.notify(this);
+        this.state.operator = "C";
+        this.state.result = 0;
+        this.state.input = [];
+        this.notify(this.state);
         break;
       case "=":
-        this.operator = "=";
-        this.input = [];
-        this.notify(this);
+        this.state.operator = "=";
+        this.state.input = [];
+        this.notify(this.state);
         break;
       case "+":
         this.operations("+");
@@ -92,65 +94,65 @@ function operations(operation) {
   switch (operation) {
     case "+": {
       //Evita el for si sólo hay 1 número
-      if (this.input.length === 1) {
-        this.result = this.input[0];
+      if (this.state.input.length === 1) {
+        this.state.result = this.state.input[0];
       } else {
         let result = 0;
-        for (let num of this.input) {
+        for (let num of this.state.input) {
           result += num;
         }
-        this.result = this.toFixed(result);
+        this.state.result = this.toFixed(result);
       }
-      this.notify(this);
+      this.notify(this.state);
       break;
     }
     case "-": {
       //Evita el for si sólo hay 1 número
-      if (this.input.length === 1) {
-        this.result = this.input[0];
+      if (this.state.input.length === 1) {
+        this.state.result = this.state.input[0];
       } else {
-        let result = this.input[0];
-        const arrLength = this.input.length;
+        let result = this.state.input[0];
+        const arrLength = this.state.input.length;
         //Realiza la operación a partir del segundo elemento en el Array
         for (let index = 1; index < arrLength; index++) {
-          const num = this.input[index];
+          const num = this.state.input[index];
           result -= num;
         }
-        this.result = this.toFixed(result);
+        this.state.result = this.toFixed(result);
       }
-      this.notify(this);
+      this.notify(this.state);
       break;
     }
     case "*": {
       //Evita el for si sólo hay 1 número
-      if (this.input.length === 1) {
-        this.result = this.input[0];
+      if (this.state.input.length === 1) {
+        this.state.result = this.state.input[0];
       } else {
-        let result = this.input[0];
-        const arrLength = this.input.length;
+        let result = this.state.input[0];
+        const arrLength = this.state.input.length;
         for (let index = 1; index < arrLength; index++) {
-          const num = this.input[index];
+          const num = this.state.input[index];
           result *= num;
         }
-        this.result = this.toFixed(result);
+        this.state.result = this.toFixed(result);
       }
-      this.notify(this);
+      this.notify(this.state);
       break;
     }
     case "/": {
       //Evita el for si sólo hay 1 número
-      if (this.input.length === 1) {
-        this.result = this.input[0];
+      if (this.state.input.length === 1) {
+        this.state.result = this.state.input[0];
       } else {
-        let result = this.input[0];
-        const arrLength = this.input.length;
+        let result = this.state.input[0];
+        const arrLength = this.state.input.length;
         for (let index = 1; index < arrLength; index++) {
-          const num = this.input[index];
+          const num = this.state.input[index];
           result /= num;
         }
-        this.result = this.toFixed(result);
+        this.state.result = this.toFixed(result);
       }
-      this.notify(this);
+      this.notify(this.state);
       break;
     }
   }
