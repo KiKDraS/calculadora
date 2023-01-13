@@ -23,6 +23,10 @@ function stateCalculadora() {
     setState,
     update,
     operate,
+    addNumberToInput,
+    addOperator,
+    clearResult,
+    showResult,
     toFixed,
   };
 }
@@ -47,13 +51,7 @@ function update(btn) {
   const hasOperator = this.state.operator;
 
   if (isNumber && !hasOperator) {
-    //Mostrar Input
-    const btnNumber = btn.textContent;
-    const newState = {
-      input: [...this.state.input, Number(btnNumber)],
-    };
-
-    this.state = this.setState(newState);
+    this.state = this.addNumberToInput(btn);
     this.notify(this.state);
   } else if ((!isNumber && !hasOperator) || (!isNumber && hasOperator)) {
     const btnType = btn.textContent;
@@ -62,32 +60,16 @@ function update(btn) {
       btnType === "+" || btnType === "-" || btnType === "*" || btnType === "/";
 
     if (this.state.operator !== btnType && isType) {
-      //Almacenar tipo de operación actual
-      const newState = {
-        operator: btnType,
-      };
-
-      this.state = this.setState(newState);
+      this.state = this.addOperator(btnType);
     } else {
-      //Mostrar/borrar resultado de operaciones
       switch (btnType) {
         case "C": {
-          const newState = {
-            operator: "C",
-            result: 0,
-            input: [],
-          };
-
-          this.state = this.setState(newState);
+          this.state = this.clearResult();
           this.notify(this.state);
           break;
         }
         case "=": {
-          const newState = {
-            operator: "=",
-          };
-
-          this.state = this.setState(newState);
+          this.state = this.showResult();
           this.notify(this.state);
           break;
         }
@@ -95,24 +77,9 @@ function update(btn) {
     }
   } else if (isNumber && hasOperator) {
     const inputLength = this.state.input.length;
-    const btnType = btn.textContent;
 
-    //Mostrar número ingresado
-    const newState = {
-      input: [...this.state.input, Number(btnType)],
-    };
-
-    this.state = this.setState(newState);
+    this.state = this.addNumberToInput(btn);
     this.notify(this.state);
-
-    //Agregar número Array 1er número ingresado y 1er número ingresado después de un igual
-    if (inputLength === 0 && this.state.result) {
-      const newState = {
-        input: [...this.state.input, this.state.result],
-      };
-
-      this.state = this.setState(newState);
-    }
 
     //Operar
     switch (this.state.operator) {
@@ -132,7 +99,7 @@ function update(btn) {
   }
 }
 
-function operate(cb) {
+function operate(operation) {
   const input = this.state.input;
 
   let result = input[0];
@@ -140,7 +107,7 @@ function operate(cb) {
 
   for (let index = 1; index < arrLength; index++) {
     const num = input[index];
-    result = cb(result, num);
+    result = operation(result, num);
   }
 
   const newState = {
@@ -149,6 +116,41 @@ function operate(cb) {
   };
 
   this.state = this.setState(newState);
+}
+
+function addNumberToInput(btn) {
+  const btnNumber = btn.textContent;
+  const newState = {
+    input: [...this.state.input, Number(btnNumber)],
+  };
+
+  return this.setState(newState);
+}
+
+function addOperator(btnType) {
+  const newState = {
+    operator: btnType,
+  };
+
+  return this.setState(newState);
+}
+
+function clearResult() {
+  const newState = {
+    operator: "C",
+    result: 0,
+    input: [],
+  };
+
+  return this.setState(newState);
+}
+
+function showResult() {
+  const newState = {
+    operator: "=",
+  };
+
+  return this.setState(newState);
 }
 
 function toFixed(num) {
@@ -173,11 +175,10 @@ const viewInput = updateView((state) => {
 
   //Evaluación de tipo de vista
   if (!operator) {
-    if (input.length < 1) visor.textContent = result;
+    if (input.length < 1) visor.textContent = 0;
     else visor.textContent = input[input.length - 1];
   } else if (!result && operator === "C") {
-    if (input.length < 1) visor.textContent = result;
-    else visor.textContent = input[input.length - 1];
+    visor.textContent = 0;
   } else if (result && operator === "=") {
     visor.textContent = result;
   } else {
