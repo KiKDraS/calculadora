@@ -85,7 +85,6 @@ function update(btn) {
         case "=": {
           const newState = {
             operator: "=",
-            input: [],
           };
 
           this.state = this.setState(newState);
@@ -136,29 +135,20 @@ function update(btn) {
 function operate(cb) {
   const input = this.state.input;
 
-  //Evita el for si sólo hay 1 número
-  if (input.length === 1) {
-    const newState = {
-      result: input[0],
-    };
+  let result = input[0];
+  const arrLength = this.state.input.length;
 
-    this.state = this.setState(newState);
-  } else {
-    let result = input[0];
-    const arrLength = this.state.input.length;
-
-    for (let index = 1; index < arrLength; index++) {
-      const num = input[index];
-      result = cb(result, num);
-    }
-
-    const newState = {
-      result: this.toFixed(result),
-      input: [result],
-    };
-
-    this.state = this.setState(newState);
+  for (let index = 1; index < arrLength; index++) {
+    const num = input[index];
+    result = cb(result, num);
   }
+
+  const newState = {
+    result: this.toFixed(result),
+    input: [result],
+  };
+
+  this.state = this.setState(newState);
 }
 
 function toFixed(num) {
