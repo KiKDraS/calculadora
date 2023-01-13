@@ -23,7 +23,7 @@ h1 {
   Calculadora
 */
 
-.calculadora {
+.calculator {
   display: block;
   margin: 0 auto;
   padding: 20px;
@@ -33,14 +33,14 @@ h1 {
   border-radius: 25px;
 }
 
-.calculadora td button {
+.calculator td button {
   display: block;
   width: 70px;
   height: 70px;
   font-size: 25px;
 }
 
-#resultado {
+#result {
   display: block;
   text-align: center;
   font-size: 40px;

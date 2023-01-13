@@ -1,6 +1,6 @@
 //Elementos del HTML
-const calculadora = document.querySelector(".calculadora");
-const visor = document.getElementById("resultado");
+const calculadora = document.querySelector(".calculator");
+const visor = document.getElementById("result");
 
 //Observer para manejar estado de la calculadora
 function stateCalculadora() {
@@ -20,8 +20,9 @@ function stateCalculadora() {
       });
     },
     start,
+    setState,
     update,
-    operations,
+    operate,
     toFixed,
   };
 }
@@ -31,130 +32,132 @@ function start() {
   this.notify(this.state);
 }
 
+function setState(newState) {
+  const state = this.state;
+  for (const key in newState) {
+    if (state.hasOwnProperty(key)) {
+      state[key] = newState[key];
+    }
+  }
+  return state;
+}
+
 function update(btn) {
-  if (btn.classList.contains("numeros")) {
-    if (this.state.operator) {
-      if (this.state.result && this.state.operator !== "C") {
-        this.state.input.push(Number(btn.textContent));
-        this.operations(this.state.operator);
-      } else {
-        this.state.input.push(Number(btn.textContent));
-        this.notify(this.state);
-      }
+  const isNumber = btn.classList.contains("number");
+  const hasOperator = this.state.operator;
+
+  if (isNumber && !hasOperator) {
+    //Mostrar Input
+    const btnNumber = btn.textContent;
+    const newState = {
+      input: [...this.state.input, Number(btnNumber)],
+    };
+
+    this.state = this.setState(newState);
+    this.notify(this.state);
+  } else if ((!isNumber && !hasOperator) || (!isNumber && hasOperator)) {
+    const btnType = btn.textContent;
+
+    const isType =
+      btnType === "+" || btnType === "-" || btnType === "*" || btnType === "/";
+
+    if (this.state.operator !== btnType && isType) {
+      //Almacenar tipo de operación actual
+      const newState = {
+        operator: btnType,
+      };
+
+      this.state = this.setState(newState);
     } else {
-      this.state.input.push(Number(btn.textContent));
-      this.notify(this.state);
+      //Mostrar/borrar resultado de operaciones
+      switch (btnType) {
+        case "C": {
+          const newState = {
+            operator: "C",
+            result: 0,
+            input: [],
+          };
+
+          this.state = this.setState(newState);
+          this.notify(this.state);
+          break;
+        }
+        case "=": {
+          const newState = {
+            operator: "=",
+            input: [],
+          };
+
+          this.state = this.setState(newState);
+          this.notify(this.state);
+          break;
+        }
+      }
     }
-  } else {
-    //1er número y 1er número después de un igual
-    if (this.state.input.length === 0 && this.state.result) {
-      this.state.input.push(this.state.result);
+  } else if (isNumber && hasOperator) {
+    const inputLength = this.state.input.length;
+    const btnType = btn.textContent;
+
+    //Mostrar número ingresado
+    const newState = {
+      input: [...this.state.input, Number(btnType)],
+    };
+
+    this.state = this.setState(newState);
+    this.notify(this.state);
+
+    //Agregar número Array 1er número ingresado y 1er número ingresado después de un igual
+    if (inputLength === 0 && this.state.result) {
+      const newState = {
+        input: [...this.state.input, this.state.result],
+      };
+
+      this.state = this.setState(newState);
     }
 
-    //Almacenar tipo de operación actual
-    if (
-      this.state.operator !== btn.textContent &&
-      (btn.textContent === "+" ||
-        btn.textContent === "-" ||
-        btn.textContent === "*" ||
-        btn.textContent === "/")
-    ) {
-      this.state.operator = btn.textContent;
-    }
-
-    switch (btn.textContent) {
-      case "C":
-        this.state.operator = "C";
-        this.state.result = 0;
-        this.state.input = [];
-        this.notify(this.state);
-        break;
-      case "=":
-        this.state.operator = "=";
-        this.state.input = [];
-        this.notify(this.state);
-        break;
+    //Operar
+    switch (this.state.operator) {
       case "+":
-        this.operations("+");
+        this.operate((n1, n2) => n1 + n2);
         break;
       case "-":
-        this.operations("-");
+        this.operate((n1, n2) => n1 - n2);
         break;
       case "*":
-        this.operations("*");
+        this.operate((n1, n2) => n1 * n2);
         break;
       case "/":
-        this.operations("/");
+        this.operate((n1, n2) => n1 / n2);
         break;
     }
   }
 }
 
-function operations(operation) {
-  switch (operation) {
-    case "+": {
-      //Evita el for si sólo hay 1 número
-      if (this.state.input.length === 1) {
-        this.state.result = this.state.input[0];
-      } else {
-        let result = 0;
-        for (let num of this.state.input) {
-          result += num;
-        }
-        this.state.result = this.toFixed(result);
-      }
-      this.notify(this.state);
-      break;
+function operate(cb) {
+  const input = this.state.input;
+
+  //Evita el for si sólo hay 1 número
+  if (input.length === 1) {
+    const newState = {
+      result: input[0],
+    };
+
+    this.state = this.setState(newState);
+  } else {
+    let result = input[0];
+    const arrLength = this.state.input.length;
+
+    for (let index = 1; index < arrLength; index++) {
+      const num = input[index];
+      result = cb(result, num);
     }
-    case "-": {
-      //Evita el for si sólo hay 1 número
-      if (this.state.input.length === 1) {
-        this.state.result = this.state.input[0];
-      } else {
-        let result = this.state.input[0];
-        const arrLength = this.state.input.length;
-        //Realiza la operación a partir del segundo elemento en el Array
-        for (let index = 1; index < arrLength; index++) {
-          const num = this.state.input[index];
-          result -= num;
-        }
-        this.state.result = this.toFixed(result);
-      }
-      this.notify(this.state);
-      break;
-    }
-    case "*": {
-      //Evita el for si sólo hay 1 número
-      if (this.state.input.length === 1) {
-        this.state.result = this.state.input[0];
-      } else {
-        let result = this.state.input[0];
-        const arrLength = this.state.input.length;
-        for (let index = 1; index < arrLength; index++) {
-          const num = this.state.input[index];
-          result *= num;
-        }
-        this.state.result = this.toFixed(result);
-      }
-      this.notify(this.state);
-      break;
-    }
-    case "/": {
-      //Evita el for si sólo hay 1 número
-      if (this.state.input.length === 1) {
-        this.state.result = this.state.input[0];
-      } else {
-        let result = this.state.input[0];
-        const arrLength = this.state.input.length;
-        for (let index = 1; index < arrLength; index++) {
-          const num = this.state.input[index];
-          result /= num;
-        }
-        this.state.result = this.toFixed(result);
-      }
-      this.notify(this.state);
-      break;
-    }
+
+    const newState = {
+      result: this.toFixed(result),
+      input: [result],
+    };
+
+    this.state = this.setState(newState);
   }
 }
 
@@ -176,17 +179,19 @@ function updateView(react) {
 
 //Operaciones de Vista
 const viewInput = updateView((state) => {
+  const { result, input, operator } = state;
+
   //Evaluación de tipo de vista
-  if (!state.operator) {
-    if (state.input.length < 1) visor.textContent = state.result;
-    else visor.textContent = state.input[state.input.length - 1];
-  } else if (!state.result && state.operator === "C") {
-    if (state.input.length < 1) visor.textContent = state.result;
-    else visor.textContent = state.input[state.input.length - 1];
-  } else if (state.result && state.operator === "=") {
-    visor.textContent = state.result;
+  if (!operator) {
+    if (input.length < 1) visor.textContent = result;
+    else visor.textContent = input[input.length - 1];
+  } else if (!result && operator === "C") {
+    if (input.length < 1) visor.textContent = result;
+    else visor.textContent = input[input.length - 1];
+  } else if (result && operator === "=") {
+    visor.textContent = result;
   } else {
-    visor.textContent = state.input[state.input.length - 1];
+    visor.textContent = input[input.length - 1];
   }
 });
 
